@@ -1,0 +1,17 @@
+{
+    "name": "teleport",
+    "title": "Teleport",
+    "description": "<p>With Teleport you can move a token between two points of a scene or between scenes.</p>",
+    "author": "knassher",
+    "version": "1.0.1",
+    "minimumCoreVersion": "0.5.3",
+    "scripts": [
+        "scripts/teleportsheetconfig.js",
+        "scripts/teleportpoint.js",
+        "scripts/teleport.js"
+        ],
+    "url": "https://github.com/kakaroto/fvtt-module-furnace",
+    "manifest": "https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/master/module.json",
+    "download": "https://github.com/kakaroto/fvtt-module-furnace/archive/v1.3.2.zip",
+    "socket": true
+}
