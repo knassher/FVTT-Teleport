@@ -10,8 +10,8 @@
         "scripts/teleportpoint.js",
         "scripts/teleport.js"
         ],
-    "url": "https://github.com/kakaroto/fvtt-module-furnace",
-    "manifest": "https://raw.githubusercontent.com/kakaroto/fvtt-module-furnace/master/module.json",
-    "download": "https://github.com/kakaroto/fvtt-module-furnace/archive/v1.3.2.zip",
+    "url": "https://github.com/knassher/FVTT-Teleport",
+    "manifest": "https://github.com/knassher/FVTT-Teleport/blob/master/module.json",
+    "download": "https://github.com/knassher/FVTT-Teleport/raw/master/packages/teleport.1.0.1.zip",
     "socket": true
 }
