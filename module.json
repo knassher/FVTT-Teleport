@@ -11,7 +11,7 @@
         "scripts/teleport.js"
         ],
     "url": "https://github.com/knassher/FVTT-Teleport",
-    "manifest": "https://github.com/knassher/FVTT-Teleport/blob/master/module.json",
+    "manifest": "https://raw.githubusercontent.com/knassher/FVTT-Teleport/master/module.json",
     "download": "https://github.com/knassher/FVTT-Teleport/raw/master/packages/teleport.1.0.1.zip",
     "socket": true
 }
