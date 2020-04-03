@@ -7,9 +7,9 @@
 class TeleportSheetConfig extends FormApplication {
 	static get defaultOptions() {
 	  const options = super.defaultOptions;
-	  options.id = "st-config";
+	  options.id = "tp-config";
       options.title = "Teleportation Point Configuration";
-	  options.template = "modules/teleport/templates/st-config.html";
+	  options.template = "modules/teleport/templates/tp-config.html";
 	  options.width = 400;
 	  return options;
   }
@@ -22,13 +22,13 @@ class TeleportSheetConfig extends FormApplication {
    */
   getData() {
     const entry = game.journal.get(this.object.data.entryId) || {};
-    const sceneId = this.object.getFlag("teleport","sceneTo") || ""
+    const sceneId = this.object.getFlag("teleport","sceneTo") || "";
     return {
       entryId: entry._id,
       sceneId: sceneId,
       entries: game.scenes.entities,
       noteId: this.object.getFlag("teleport","noteTo") || "",
-      noteentries: TeleportSheetConfig.getSceneTransitions(sceneId),
+      noteentries: TeleportSheetConfig.getTeleportPoints(sceneId),
       object: duplicate(this.object.data),
       options: this.options,
       entryName: entry.name,
@@ -44,7 +44,7 @@ class TeleportSheetConfig extends FormApplication {
     /**
    * Register game settings used by the SceneTransitionLayer
    */
-    static registerSettings() {
+    //static registerSettings() {
       //game.settings.register("teleport", "transition", {
       //  name: "Map Scene Transition Toggle",
       // scope: "world",
@@ -52,7 +52,8 @@ class TeleportSheetConfig extends FormApplication {
       //  config: false,
       //  default: false
       //});
-    }
+    //}
+
   /**
    * This method is called upon form submission after form data is validated
    * @param event {Event}       The initial triggering submission event
@@ -88,29 +89,32 @@ class TeleportSheetConfig extends FormApplication {
     return super.close();
   }
 
-  static getSceneTransitions(sceneId) {
+   /**
+   * Helpers methods
+   **/
+  static getTeleportPoints(sceneId) {
     const scene = game.scenes.get(sceneId);
     if (!scene) return;
-    return scene.data.notes.filter(t=>t.flags.teleport != undefined);
+    return scene.data.notes.filter(t=>t.flags.teleport !== undefined);
   }
-  static getSceneTransition(sceneId,noteId){
+  static getTeleportPoint(sceneId,noteId){
     const scene = game.scenes.get(sceneId);
     if (!scene) return;
-    return scene.data.notes.find(t=>t._id == noteId);
+    return scene.data.notes.find(t=>t._id === noteId);
   }
 
-  static getTokensCuadrant(x,y,g,s) {
+  static getTokensQuadrant(x,y,g,s) {
     let m = 1;
     let a = [];
     let i = 0;
     let cont = 0;
-    let c = TeleportSheetConfig.getCuadrant(x,y,g,m);
+    let c = TeleportSheetConfig.getQuadrants(x,y,g,m);
     for (i; i<s;i++) {
       a.push(c[cont]);
-      if (cont == 7) {
+      if (cont === 7) {
         cont = 0;
         m = m + 1;
-        c = TeleportSheetConfig.getCuadrant(x,y,g,m);
+        c = TeleportSheetConfig.getQuadrants(x,y,g,m);
       }
       else
       {
@@ -120,7 +124,7 @@ class TeleportSheetConfig extends FormApplication {
     return a;
   }
 
-  static getCuadrant(x,y,g,m) {
+  static getQuadrants(x,y,g,m) {
     const x1 = x- (g + g*m);
     const x2 = x - g*m;
     const x3 = x;
@@ -135,8 +139,8 @@ class TeleportSheetConfig extends FormApplication {
       3:{x:x1,y:y2},
       4:{x:x2,y:y2},
       5:{x:x3,y:y2},
-      6:{x:x1,y:y1},
-      7:{x:x2,y:y2},
+      6:{x:x1,y:y3},
+      7:{x:x2,y:y3},
       8:{x:x3,y:y3}
     }
   }
@@ -148,7 +152,7 @@ class TeleportSheetConfig extends FormApplication {
       for (const ft of fromtokens){
         let flag = true;
         for (const tt of totokens) {
-          if (ft.name == tt.name && ft.actor.id == tt.actor.id) {
+          if (ft.name === tt.name && ft.actor.id === tt.actor.id) {
             movetokens.push(tt);
             flag = false;
             break;

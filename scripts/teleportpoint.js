@@ -14,7 +14,12 @@
  *   text: "A custom label",
  *   fontSize: 48,
  *   textAnchor: CONST.TEXT_ANCHOR_POINTS.CENTER,
- *   textColor: "#00FFFF"
+ *   textColor: "#00FFFF",
+ *   flags: {
+ *              teleport: { sceneTo: "qwdq3q234fas",
+ *                          noteTo: "gretewffvty31"
+ *                        }
+ *          }
  * });
  */
 class TeleportPoint {
@@ -27,7 +32,7 @@ class TeleportPoint {
         }
 
       getSceneControlButtons(buttons) {
-        let noteButton = buttons.find(b => b.name == "notes");
+        let noteButton = buttons.find(b => b.name === "notes");
 
         if (noteButton) {
             noteButton.tools.push({
@@ -92,33 +97,37 @@ class TeleportPoint {
     }
 
       async _onDoubleLeft(event) {
+        //Need this to clean the previos hovered note.
+        canvas.activeLayer._hover = null;
+        //Read flags from note
         const sceneTo = this.getFlag("teleport", "sceneTo");
         const noteTo =  this.getFlag("teleport", "noteTo");
         if (sceneTo) { //If is a transition note then send player to transition point.
             // to scene data
             let scene = game.scenes.get(sceneTo);
-            let note  = TeleportSheetConfig.getSceneTransition(sceneTo,noteTo);
-            if (game.user.isGM && scene._id != canvas.scene._id) {
+            let note  = TeleportSheetConfig.getTeleportPoint(sceneTo,noteTo);
+            if (game.user.isGM && scene._id !== canvas.scene._id) {
                 let preloaded = await game.scenes.preload(sceneTo);
                 if (!preloaded) return ui.notifications.warn("Destination scene is not loaded yet. Please try again.");
-            };
-            if (!note || !scene) return;
+            }
+            if (!scene) return;
             //from scene data
-            const foct = canvas.tokens.controlled.filter(t => t.owner == true); //owened controlled tokens
+            const foct = canvas.tokens.controlled.filter(t => t.owner === true); //owened controlled tokens
             canvas.tokens.releaseAll();
-            let arrival;
             //processing scene
             //... Activate the scene
             if (game.user.isGM && foct.length > 0) scene.activate();
             //... Calculate the focus point in the new scene
-            if (noteTo && noteTo != "") {
+            let arrival;
+            if (noteTo && noteTo !== "") {
                 arrival = { x:note.x , y:note.y, scale:1, duration: 10 };
             }
             else {
-                arrival = { x:scene.data.width / 2, y:scene.data.height / 2, scale:1, duration: 10  };
+                const dimensions = canvas.getDimensions(scene.data);
+                arrival = { x:dimensions.width / 2, y:dimensions.height / 2, scale:1, duration: 10  };
             }
             //... Show the scene if wasn't visible or redraw is if the same scene
-            if (scene._id != canvas.scene._id) {
+            if (scene._id !== canvas.scene._id) {
                 if (game.user.isGM && foct.length > 0) await scene.update({navigation: true});
                 await scene.view();
             }
@@ -128,14 +137,14 @@ class TeleportPoint {
             arrival = canvas.grid.getCenter(arrival.x,arrival.y);
             const toct = canvas.tokens.ownedTokens;
             let ptokens = TeleportSheetConfig.getTokenstoMove(foct,toct);
-            let cuadrants = TeleportSheetConfig.getTokensCuadrant(arrival[0],arrival[1],scene.data.grid,
+            let quadrants = TeleportSheetConfig.getTokensQuadrant(arrival[0],arrival[1],scene.data.grid,
                                                                     ptokens[0].length + ptokens[1].length);
             let cont = 0;
             //...Move existing tokens in the scene
             $.each(ptokens[0], async function(i,t) {
                 let data = {_id: t.id,
-                            x: canvas.grid.getSnappedPosition(cuadrants[cont].x,cuadrants[cont].y).x,
-                            y: canvas.grid.getSnappedPosition(cuadrants[cont].x,cuadrants[cont].y).y
+                            x: canvas.grid.getSnappedPosition(quadrants[cont].x,quadrants[cont].y).x,
+                            y: canvas.grid.getSnappedPosition(quadrants[cont].x,quadrants[cont].y).y
                             };
                 cont = cont + 1;
                 canvas.tokens.get(data._id)._noAnimate = true;
@@ -145,7 +154,7 @@ class TeleportPoint {
             //...Create missing tokens in the scene
             $.each(ptokens[1], async function(i,t) {
                 let data = t.clone().data;
-                let coors = canvas.grid.getSnappedPosition(cuadrants[cont].x,cuadrants[cont].y);
+                let coors = canvas.grid.getSnappedPosition(quadrants[cont].x,quadrants[cont].y);
                 data.x = coors.x;
                 data.y = coors.y;
                 delete data["_id"];
@@ -165,7 +174,7 @@ class TeleportPoint {
       _onDoubleRight(event) {
         let sheet;
         const sceneTo = this.getFlag("teleport", "sceneTo");
-        if (sceneTo && sceneTo != "") {
+        if (sceneTo && sceneTo !== "") {
             sheet = new TeleportSheetConfig(this);
         }
         else {
@@ -178,17 +187,17 @@ class TeleportPoint {
           const selecttxt = `<select name="noteId" data-dtype="String"><option value=""></option></select>`;
           let select = $(selecttxt);
           const notelist = html.find("select[name='noteId']");
-          const result = TeleportSheetConfig.getSceneTransitions(html.find("select[name='sceneId']")[0].value);
+          const result = TeleportSheetConfig.getTeleportPoints(html.find("select[name='sceneId']")[0].value);
           $.each(result,function(t){
               select.append($("<option />").val(this._id).text(this.text));
           });
           notelist.replaceWith(select);
       }
 
-        /**
+     /**
      * Creates and renders a dialog for name entry
      * @param {*} data
-     */
+     **/
     _createDialogST(data) {
         const dialogData = data;
         new Dialog({
@@ -201,7 +210,7 @@ class TeleportPoint {
                     callback: async e => {
                         const input = e.find("input[name='name']");
                         if(input[0].value) {
-                            let entry = game.journal.entities.find(t => t.name == "Teleportation");
+                            let entry = game.journal.entities.find(t => t.name === "Teleportation");
                             if (!entry) entry = await JournalEntry.create({name: "Teleportation"});
 
                             // Create Note data
@@ -247,4 +256,4 @@ class TeleportPoint {
     }
 }
 
-let st = new(TeleportPoint);
+const teleportpoint = new(TeleportPoint);

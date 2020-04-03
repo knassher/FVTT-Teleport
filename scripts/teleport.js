@@ -2,8 +2,13 @@
         let furnace = game.modules.get("furnace").active;
 
         if (furnace) {
-            FurnacePatching.replaceMethod(Note,"_onDoubleLeft",st._onDoubleLeft);
-            FurnacePatching.replaceMethod(Note,"_onDoubleRight",st._onDoubleRight);
+            FurnacePatching.replaceMethod(Note,"_onDoubleLeft",teleportpoint._onDoubleLeft);
+            FurnacePatching.replaceMethod(Note,"_onDoubleRight",teleportpoint._onDoubleRight);
+            //This patch is to fix cases when the controlIcon of a note doesn't have a border defined.
+            const f = FurnacePatching.patchClass(PlaceableObject,PlaceableObject.prototype._onMouseOver,11,
+                "if ( this.controlIcon ) this.controlIcon.border.visible = true;",
+                "if ( this.controlIcon && this.controlIcon.border ) this.controlIcon.border.visible = true;");
+            FurnacePatching.replaceMethod(PlaceableObject,"_onMouseOver",f.prototype._onMouseOver);
 
             // Adding Icons for TeleportSheetConfig sheet
             CONFIG.Teleport = {
@@ -28,47 +33,70 @@
                                           "Wooden Door": "modules/teleport/icons/wooden-door.svg"
                                         },
                                         defaultIcon: "modules/teleport/icons/3d-stairs.svg"
-                                      };
+                            };
+            game.Teleport = {
+                                point: teleportpoint,
+                                getTeleportPoints: TeleportSheetConfig.getTeleportPoints,
+                                getTeleportPoint: TeleportSheetConfig.getTeleportPoint,
+                                getTokensQuadrant: TeleportSheetConfig.getTokensQuadrant,
+                                getQuadrants: TeleportSheetConfig.getQuadrants,
+                                getTokenstoMove: TeleportSheetConfig.getTokenstoMove
+                            };
             console.log(`Teleport | Initializing Teleport module for FoundryVTT.`);
         }
         else {
             console.log(`Teleport | Furnace module not enabled, Teleport module not loaded.`);
-        };
+        }
     });
 
+    /**
+     * Hook that set the "Add Teleport Point on the Note controls bar"
+     **/
     Hooks.on('getSceneControlButtons', controls => {
-        st.getSceneControlButtons(controls);
+        teleportpoint.getSceneControlButtons(controls);
     });
 
-    //Note hook
     /**
      * Hook on delete note to fix core bug with hover not being cleared on delete
-     */
+     **/
     Hooks.on("deleteNote", (scene, sceneId, data, options, userId) =>{
         return canvas.activeLayer._hover ? canvas.activeLayer._hover = null : null;
     });
 
-    //Hooks for Note sheet and Scene Transition sheet
     /**
-     * Hook on note config render to inject filepicker and remove selector
-     */
+     * Hooks for TelportSheetConfig rendering, it will assign the method that will handle the
+     * onChange event of the scene listbox control.
+     **/
     Hooks.on("renderTeleportSheetConfig", (app, html, data) => {
-        const iconSelector = html.find("select[name='sceneId']")[0];
-        iconSelector.onchange = st._onChange.bind(null,event,html);
+        const sceneSelector = html.find("select[name='sceneId']")[0];
+        sceneSelector.onchange = teleportpoint._onChange.bind(null,event,html);
     });
 
+    /**
+     * Hooks fired on the player side when the position of a existing token is updated, also the hooks
+     * center the player's view on the teleported token.
+     **/
+
+    //This hook will center the view on the teleported token, will open the scene if the destination point is
+    //in a different scene and also will restore movement animation for the token.
     Hooks.on("updateToken", async (scene, sceneID, updateData, options, userId) => {
         if (!game.user.isGM && options && options.teleported) {
-            canvas.tokens.releaseAll();
             let tokentopan = canvas.tokens.get(updateData._id);
             if (! tokentopan.owner) return;
-            console.log("Teleport | Teleporting name: ", tokentopan.name,", id: ",tokentopan.id, ", event: 2");
-            tokentopan.control({releaseOthers:false});
+            console.log("Teleport | Teleporting token: ", tokentopan.name,", to scene: ",scene.name, ", event: 2");
+            let sceneto = game.scenes.get(sceneID);
+            if (scene._id != canvas.scene._id) {
+                await sceneto.view();
+            }
             await canvas.animatePan({x:tokentopan.coords[0],y:tokentopan.coords[1],scale:1,duration:10});
             tokentopan._noAnimate = false;
+            canvas.tokens.releaseAll();
+            tokentopan.control({releaseOthers:false});
         }
     });
 
+    // This hook will preload the scene to avoid any issues with textures that didn't load. It also disables
+    // the animation movement of the token.
     Hooks.on("preUpdateToken", async (scene, sceneId, actorData, options) => {
         if (!game.user.isGM && options && options.teleported) {
             let tokentopan = canvas.tokens.get(actorData._id);
@@ -78,21 +106,30 @@
         }
     });
 
+    /**
+     * Hooks fired on the player side when a new token is created, also the hooks center the
+     * player's view on the teleported token.
+     **/
+
+    // This hook will preload the scene to avoid any issues with textures that didn't load.
     Hooks.on("preCreateToken", async (scene, sceneId, actorData, options) => {
         if (!game.user.isGM && options && options.teleported) {
             await game.scenes.preload(sceneId)
         }
     });
 
+    // This hook will open the new scene and focus the view on the last teleported token.
     Hooks.on("createToken", async (scene, sceneID, tokenData, options, userId) => {
         if (!game.user.isGM && options && options.teleported) {
-            console.log("Teleport | Teleporting name: ", tokenData.name,", id: ", tokenData._id, ", event: 1");
+            let tokentopan = canvas.tokens.get(tokenData._id);
+            if (! tokentopan.owner) return;
+            console.log("Teleport | Teleporting token: ", tokenData.name,", to scene: ", scene.name, ", event: 1");
             let sceneto = game.scenes.get(sceneID);
             if (scene._id != canvas.scene._id) {
                 await sceneto.view();
             }
             await canvas.animatePan({x:tokenData.x,y:tokenData.y,scale:1,duration:10});
             canvas.tokens.releaseAll();
-            canvas.tokens.get(tokenData._id).control({releaseOthers:false});
+            tokentopan.control({releaseOthers:false});
         }
     });

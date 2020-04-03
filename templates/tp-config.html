@@ -1,0 +1,82 @@
+<form autocomplete="off" onsubmit="event.preventDefault();">
+
+    <div class="form-group">
+        <input type="hidden" name="entryId" value="{{entryId}}" readonly/>
+    </div>
+    <div class="form-group">
+        <label>To Scene</label>
+        <select name="sceneId" data-dtype="String">
+            {{#select sceneId}}
+            <option value=""></option>
+            {{#each entries}}
+            <option value="{{this._id}}">{{this.name}}</option>
+            {{/each}}
+            {{/select}}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>To Note</label>
+        <select name="noteId" data-dtype="String">
+            {{#select noteId}}
+            <option value=""></option>
+            {{#each noteentries}}
+            <option value="{{this._id}}">{{this.text}}</option>
+            {{/each}}
+            {{/select}}
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Text Label</label>
+        <input type="text" name="text" value="{{object.text}}" placeholder="{{entryName}}"/>
+    </div>
+
+    <div class="form-group">
+        <label>X-Position</label>
+        <input type="text" name="x" placeholder="X" value="{{object.x}}" data-dtype="Number"/>
+    </div>
+
+    <div class="form-group">
+        <label>Y-Position</label>
+        <input type="text" name="y" placeholder="Y" value="{{object.y}}" data-dtype="Number"/>
+    </div>
+
+    <div class="form-group">
+        <label>Entry Icon</label>
+        <select name="icon" data-dtype="String">
+            {{#select object.icon}}
+            {{#each entryIcons as |icon name|}}
+            <option value="{{icon}}">{{name}}</option>
+            {{/each}}
+            {{/select}}
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Icon Size ({{localize "Pixels"}})</label>
+        <input type="text" name="iconSize" value="{{object.iconSize}}" data-dtype="Number"/>
+    </div>
+
+    <div class="form-group">
+        <label>Icon Tint</label>
+        <input class="color" type="text" name="iconTint" value="{{object.iconTint}}" data-dtype="String"/>
+        <input type="color" value="{{object.iconTint}}" data-edit="iconTint"/>
+    </div>
+
+    <div class="form-group">
+        <label>Font Size</label>
+        <input type="text" name="fontSize" value="{{object.fontSize}}" data-dtype="Number"/>
+    </div>
+
+    <div class="form-group">
+        <label>Text Anchor Point</label>
+        <select name="textAnchor" data-dtype="Number">
+            {{#select object.textAnchor}}
+            {{#each textAnchors as |v k|}}
+            <option value="{{k}}">{{v}}</option>
+            {{/each}}
+            {{/select}}
+        </select>
+    </div>
+
+    <button type="submit" name="submit" value="1"><i class="far fa-save"></i> Update Note</button>
+</form>
