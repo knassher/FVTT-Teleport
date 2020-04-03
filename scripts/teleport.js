@@ -1,7 +1,5 @@
     Hooks.once("init", function() {
-        let furnace = game.modules.get("furnace").active;
-
-        if (furnace) {
+        if (game.modules.get("furnace") && game.modules.get("furnace").active) {
             FurnacePatching.replaceMethod(Note,"_onDoubleLeft",teleportpoint._onDoubleLeft);
             FurnacePatching.replaceMethod(Note,"_onDoubleRight",teleportpoint._onDoubleRight);
             //This patch is to fix cases when the controlIcon of a note doesn't have a border defined.
@@ -46,6 +44,7 @@
         }
         else {
             console.log(`Teleport | Furnace module not enabled, Teleport module not loaded.`);
+            ui.notifications.error("Please install Furnace if you want to use Teleport.")
         }
     });
 

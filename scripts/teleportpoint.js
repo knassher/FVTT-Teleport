@@ -51,12 +51,12 @@ class TeleportPoint {
 
       registerListeners(value) {
           if (value) {
-              if (game.modules.get("pin-cushion").active) canvas.stage.off("click");
+              if (game.modules.get("pin-cushion") && game.modules.get("pin-cushion").active) canvas.stage.off("click");
               canvas.stage.on("click", event => this._onClickCanvas(event));
           }
           else {
               canvas.stage.off("click");
-              if (game.modules.get("pin-cushion").active) {
+              if (game.modules.get("pin-cushion") && game.modules.get("pin-cushion").active) {
                   const pc = new PinCushion();
                   canvas.stage.on("click", event => pc._onClickCanvas(event));
               }
