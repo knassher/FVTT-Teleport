@@ -106,9 +106,11 @@ class TeleportPoint {
             // to scene data
             let scene = game.scenes.get(sceneTo);
             let note  = TeleportSheetConfig.getTeleportPoint(sceneTo,noteTo);
-            if (game.user.isGM && scene._id !== canvas.scene._id) {
+            if (game.user.isGM && scene._id !== canvas.scene._id && !scene.options["loaded"]) {
                 let preloaded = await game.scenes.preload(sceneTo);
                 if (!preloaded) return ui.notifications.warn("Destination scene is not loaded yet. Please try again.");
+                scene.options["loaded"] = true;
+                console.log("Teleport | Scene ", scene.name ," was preloaded.");
             }
             if (!scene) return;
             //from scene data
@@ -140,6 +142,8 @@ class TeleportPoint {
             let quadrants = TeleportSheetConfig.getTokensQuadrant(arrival[0],arrival[1],scene.data.grid,
                                                                     ptokens[0].length + ptokens[1].length);
             let cont = 0;
+            let options = {embeddedName:"Token",teleported:true};
+            if (!game.user.isGM) options["pcTriggered"] = true;
             //...Move existing tokens in the scene
             $.each(ptokens[0], async function(i,t) {
                 let data = {_id: t.id,
@@ -148,8 +152,9 @@ class TeleportPoint {
                             };
                 cont = cont + 1;
                 canvas.tokens.get(data._id)._noAnimate = true;
-                await canvas.scene.updateEmbeddedEntity("Token",data,{embeddedName:"Token",teleported:true});
+                await canvas.scene.updateEmbeddedEntity("Token",data,options);
                 canvas.tokens.get(data._id)._noAnimate = false;
+                console.log("Teleport | Teleporting token: ", t.name,", to scene: ",scene.name, ", event: 2");
             });
             //...Create missing tokens in the scene
             $.each(ptokens[1], async function(i,t) {
@@ -159,7 +164,8 @@ class TeleportPoint {
                 data.y = coors.y;
                 delete data["_id"];
                 cont = cont + 1;
-                await canvas.scene.createEmbeddedEntity("Token",data,{embeddedName:"Token",teleported:true});
+                await canvas.scene.createEmbeddedEntity("Token",data,options);
+                console.log("Teleport | Teleporting token: ", t.name,", to scene: ",scene.name, ", event: 1");
             });
         }
         else {//If is a regular note, open journalentry sheet.

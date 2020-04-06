@@ -1,4 +1,4 @@
-    Hooks.once("init", function() {
+    Hooks.once("init", async function() {
         if (game.modules.get("furnace") && game.modules.get("furnace").active) {
             FurnacePatching.replaceMethod(Note,"_onDoubleLeft",teleportpoint._onDoubleLeft);
             FurnacePatching.replaceMethod(Note,"_onDoubleRight",teleportpoint._onDoubleRight);
@@ -40,12 +40,17 @@
                                 getQuadrants: TeleportSheetConfig.getQuadrants,
                                 getTokenstoMove: TeleportSheetConfig.getTokenstoMove
                             };
-            console.log(`Teleport | Initializing Teleport module for FoundryVTT.`);
+            await loadTPIcons();
+            console.log(`Teleport | Initializing Teleport module for FoundryVTT is completed.`);
         }
         else {
             console.log(`Teleport | Furnace module not enabled, Teleport module not loaded.`);
             ui.notifications.error("Please install Furnace if you want to use Teleport.")
         }
+    });
+
+    Hooks.once("ready", () => {
+        canvas.scene.options["loaded"] = true;
     });
 
     /**
@@ -79,12 +84,13 @@
     //This hook will center the view on the teleported token, will open the scene if the destination point is
     //in a different scene and also will restore movement animation for the token.
     Hooks.on("updateToken", async (scene, sceneID, updateData, options, userId) => {
-        if (!game.user.isGM && options && options.teleported) {
+        if (!options) return;
+        if (!game.user.isGM && options.pcTriggered && options.teleported) {
             let tokentopan = canvas.tokens.get(updateData._id);
             if (! tokentopan.owner) return;
             console.log("Teleport | Teleporting token: ", tokentopan.name,", to scene: ",scene.name, ", event: 2");
             let sceneto = game.scenes.get(sceneID);
-            if (scene._id != canvas.scene._id) {
+            if (sceneto._id != canvas.scene._id) {
                 await sceneto.view();
             }
             await canvas.animatePan({x:tokentopan.coords[0],y:tokentopan.coords[1],scale:1,duration:10});
@@ -97,11 +103,13 @@
     // This hook will preload the scene to avoid any issues with textures that didn't load. It also disables
     // the animation movement of the token.
     Hooks.on("preUpdateToken", async (scene, sceneId, actorData, options) => {
-        if (!game.user.isGM && options && options.teleported) {
+        if (!game.user.isGM && options && options.teleported && !game.scenes.get(sceneId).options["loaded"]) {
             let tokentopan = canvas.tokens.get(actorData._id);
             if (! tokentopan.owner) return;
             tokentopan._noAnimate = true;
             await game.scenes.preload(sceneId)
+            game.scenes.get(sceneId).options["loaded"] = true;
+            console.log("Teleport | Scene ", scene.name ," was preloaded.");
         }
     });
 
@@ -112,19 +120,22 @@
 
     // This hook will preload the scene to avoid any issues with textures that didn't load.
     Hooks.on("preCreateToken", async (scene, sceneId, actorData, options) => {
-        if (!game.user.isGM && options && options.teleported) {
+        if (!game.user.isGM && options && options.teleported && !game.scenes.get(sceneId).options["loaded"]) {
             await game.scenes.preload(sceneId)
+            game.scenes.get(sceneId).options["loaded"] = true;
+            console.log("Teleport | Scene ", scene.name ," was preloaded.");
         }
     });
 
     // This hook will open the new scene and focus the view on the last teleported token.
     Hooks.on("createToken", async (scene, sceneID, tokenData, options, userId) => {
-        if (!game.user.isGM && options && options.teleported) {
+        if (!options) return;
+        if (!game.user.isGM && options.pcTriggered && options.teleported) {
             let tokentopan = canvas.tokens.get(tokenData._id);
             if (! tokentopan.owner) return;
             console.log("Teleport | Teleporting token: ", tokenData.name,", to scene: ", scene.name, ", event: 1");
             let sceneto = game.scenes.get(sceneID);
-            if (scene._id != canvas.scene._id) {
+            if (sceneto._id != canvas.scene._id) {
                 await sceneto.view();
             }
             await canvas.animatePan({x:tokenData.x,y:tokenData.y,scale:1,duration:10});
@@ -132,3 +143,38 @@
             tokentopan.control({releaseOthers:false});
         }
     });
+
+
+    async function loadTPIcons() {
+        const loader = PIXI.Loader.shared;
+        let toLoad = [];
+
+        toLoad = toLoad.concat(Object.values(CONFIG.Teleport.noteIcons));
+
+        toLoad = new Array(...new Set(toLoad.filter(t => !loader.resources.hasOwnProperty(t))));
+        const valid = new Set();
+        for ( let f of toLoad ) {
+        // FIXME: Cache bust any/all SVG images to avoid them becoming tiny
+        const isSVG = /\.svg/.test(f);
+        if ( isSVG ) f = f.split("?")[0] + `?${randomID(8)}`;
+        valid.add(f);
+        }
+
+        loader.add(Array.from(valid), RESOURCE_LOADER_OPTIONS);
+
+        return new Promise((resolve, reject) => {
+        loader.removeAllListeners();
+        loader.on('progress', (loader, resource) => {
+          let cacheName = resource.name.split("?").shift();
+          loader.resources[cacheName] = loader.resources[resource.name];
+          let pct = Math.round(loader.progress * 10) / 10;
+          console.log(`${vtt} | Loaded ${cacheName} (${pct}%)`);
+        });
+        loader.on('error', (loader, resources, resource) => {
+          console.warn(`${vtt} | Texture load failed for ${resource.name}`);
+        });
+        loader.load((loader, resources) => {
+          resolve(resources);
+        });
+        });
+    }
