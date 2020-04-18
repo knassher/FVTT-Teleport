@@ -1,0 +1,40 @@
+.teleport h3 {
+  flex: 0 100%;
+  margin: 3px;
+  text-align: center;
+}
+
+.teleport a.remove {
+  flex: 0 15px;
+  align-self: center;
+  padding: 5px 5px;
+}
+
+.teleport .header {
+  margin-top: 6px;
+}
+
+.teleport .controls {
+  flex: 0 100%;
+  margin: 3px;
+  text-align: center;
+  background: rgba(0,0,0,0.05);
+  border-top: 1px solid rgba(102, 102, 102, 1);
+  border-bottom: 1px solid rgba(102, 102, 102, 1);
+}
+
+.teleport table {
+  width: 100%;
+  border-top: 2px solid rgba(102, 102, 102, 1);
+  border-bottom: 2px solid rgba(102, 102, 102, 1);
+}
+
+.teleport .teleportrow:hover {
+  background-color: #f5f5f5;
+}
+
+.teleport .disabled {
+  border: none;
+  color: #4b4a44;
+  background-color: #ebebe4;
+}

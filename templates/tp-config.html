@@ -1,82 +1,147 @@
-<form autocomplete="off" onsubmit="event.preventDefault();">
+<form class="flexcol teleport" autocomplete="off" onsubmit="event.preventDefault();">
 
-    <div class="form-group">
-        <input type="hidden" name="entryId" value="{{entryId}}" readonly/>
-    </div>
-    <div class="form-group">
-        <label>To Scene</label>
-        <select name="sceneId" data-dtype="String">
-            {{#select sceneId}}
-            <option value=""></option>
-            {{#each entries}}
-            <option value="{{this._id}}">{{this.name}}</option>
-            {{/each}}
-            {{/select}}
-        </select>
-    </div>
-    <div class="form-group">
-        <label>To Note</label>
-        <select name="noteId" data-dtype="String">
-            {{#select noteId}}
-            <option value=""></option>
-            {{#each noteentries}}
-            <option value="{{this._id}}">{{this.text}}</option>
-            {{/each}}
-            {{/select}}
-        </select>
-    </div>
-    <div class="form-group">
-        <label>Text Label</label>
-        <input type="text" name="text" value="{{object.text}}" placeholder="{{entryName}}"/>
-    </div>
+    <!-- Navigation Tabs -->
+    <nav class="sheet-tabs tabs" data-group="sections">
+        <a class="item" data-tab="tpData"><i class="fas fa-dice-d20"></i> Teleport Point Data</a>
+        <a class="item" data-tab="tpOffset"><i class="fas fa-cogs"></i> Teleport Point Offsets</a>
+    </nav>
 
-    <div class="form-group">
-        <label>X-Position</label>
-        <input type="text" name="x" placeholder="X" value="{{object.x}}" data-dtype="Number"/>
-    </div>
+    <!-- Main Content Section -->
+    <section id="config-tabs" class="content">
 
-    <div class="form-group">
-        <label>Y-Position</label>
-        <input type="text" name="y" placeholder="Y" value="{{object.y}}" data-dtype="Number"/>
-    </div>
+        <!-- TP Data Tab -->
+        <div class="tab" data-tab="tpData" data-group="sections">
+            <div class="form-group">
+                <input type="hidden" name="entryId" value="{{entryId}}" readonly/>
+            </div>
+            <div class="form-group">
+                <label>To Scene</label>
+                <select name="sceneId" data-dtype="String">
+                    {{#select sceneId}}
+                        <option value=""></option>
+                        {{#each entries}}
+                            <option value="{{this._id}}">{{this.name}}</option>
+                        {{/each}}
+                    {{/select}}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>To Note</label>
+                <select name="noteId" data-dtype="String">
+                    {{#select noteId}}
+                        <option value=""></option>
+                        {{#each noteentries}}
+                            {{#if this.flags.teleport.idText}}
+                                <option value="{{this._id}}">{{this.flags.teleport.idText}}</option>
+                            {{else}}
+                                <option value="{{this._id}}">{{this.text}}</option>
+                            {{/if}}
+                        {{/each}}
+                    {{/select}}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Text Label</label>
+                <input type="text" name="text" value="{{object.text}}" placeholder="Display Text"/>
+            </div>
 
-    <div class="form-group">
-        <label>Entry Icon</label>
-        <select name="icon" data-dtype="String">
-            {{#select object.icon}}
-            {{#each entryIcons as |icon name|}}
-            <option value="{{icon}}">{{name}}</option>
-            {{/each}}
-            {{/select}}
-        </select>
-    </div>
+            <div class="form-group">
+                <label>Id Text Label</label>
+                <input type="text" name="idText" value="{{object.flags.teleport.idText}}" placeholder="Identification Text"/>
+            </div>
+            <div class="form-group">
+                <label>X-Position</label>
+                <input type="text" name="x" placeholder="X" value="{{object.x}}" data-dtype="Number"/>
+            </div>
 
-    <div class="form-group">
-        <label>Icon Size ({{localize "Pixels"}})</label>
-        <input type="text" name="iconSize" value="{{object.iconSize}}" data-dtype="Number"/>
-    </div>
+            <div class="form-group">
+                <label>Y-Position</label>
+                <input type="text" name="y" placeholder="Y" value="{{object.y}}" data-dtype="Number"/>
+            </div>
 
-    <div class="form-group">
-        <label>Icon Tint</label>
-        <input class="color" type="text" name="iconTint" value="{{object.iconTint}}" data-dtype="String"/>
-        <input type="color" value="{{object.iconTint}}" data-edit="iconTint"/>
-    </div>
+            <div class="form-group">
+                <label>Entry Icon</label>
+                <select name="icon" data-dtype="String">
+                    {{#select object.icon}}
+                        {{#each entryIcons as |icon name|}}
+                            <option value="{{icon}}">{{name}}</option>
+                        {{/each}}
+                    {{/select}}
+                </select>
+            </div>
 
-    <div class="form-group">
-        <label>Font Size</label>
-        <input type="text" name="fontSize" value="{{object.fontSize}}" data-dtype="Number"/>
-    </div>
+            <div class="form-group">
+                <label>Icon Size ({{localize "Pixels"}})</label>
+                <input type="text" name="iconSize" value="{{object.iconSize}}" data-dtype="Number"/>
+            </div>
 
-    <div class="form-group">
-        <label>Text Anchor Point</label>
-        <select name="textAnchor" data-dtype="Number">
-            {{#select object.textAnchor}}
-            {{#each textAnchors as |v k|}}
-            <option value="{{k}}">{{v}}</option>
-            {{/each}}
-            {{/select}}
-        </select>
-    </div>
+            <div class="form-group">
+                <label>Icon Tint</label>
+                <input class="color" type="text" name="iconTint" value="{{object.iconTint}}" data-dtype="String"/>
+                <input type="color" value="{{object.iconTint}}" data-edit="iconTint"/>
+            </div>
 
-    <button type="submit" name="submit" value="1"><i class="far fa-save"></i> Update Note</button>
+            <div class="form-group">
+                <label>Font Size</label>
+                <input type="text" name="fontSize" value="{{object.fontSize}}" data-dtype="Number"/>
+            </div>
+
+            <div class="form-group">
+                <label>Text Anchor Point</label>
+                <select name="textAnchor" data-dtype="Number">
+                    {{#select object.textAnchor}}
+                    {{#each textAnchors as |v k|}}
+                    <option value="{{k}}">{{v}}</option>
+                    {{/each}}
+                    {{/select}}
+                </select>
+            </div>
+        </div>
+
+        <!-- TP Offset Tab -->
+        <div class="tab" data-tab="tpOffset" data-group="sections">
+            <div class="form-group">
+                <h3>Add destination offsets for this Teleport Point</h3>
+            </div>
+            <div class="form-group controls">
+                <a class="capture"><i class="fas fa-plus"></i>&nbsp;Capture Offset(s)</a>
+                <a class="clearall"><i class="fas fa-trash"></i>&nbsp;Clear All Offsets</a>
+            </div>
+			<div class="form-group header" style="justify-content:center;">
+				<table>
+						<thead>
+							<th>#Index</th>
+							<th>Coords.X</th>
+							<th>Coords.Y</th>
+							<th>Remove</th>
+						</thead>
+						<tbody>
+							{{#each object.flags.teleport.offsets}}
+							<tr class="teleportrow">
+								<td>
+									<input class="disabled" value="{{@index}}" size="5" style="text-align:center;" readonly>
+								</td>
+								<td>
+									<input class="disabled" type="number" name="coordX" value="{{this.x}}" placeholder="0.00" readonly/>
+								</td>
+								<td>
+									<input class="disabled" name="coordY" value="{{this.y}}" placeholder="0.00" readonly/>
+								</td>
+								<td>
+									<a class='remove' title="Delete">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<i class="fas fa-times"></i></a>
+								</td>
+							</tr>
+							{{/each}}
+						</tbody>
+				</table>
+			</div>
+        </div>
+    </section>
+
+    <!-- Settings Footer -->
+    <footer class="sheet-footer flexrow">
+        <button type="submit" name="submit" value="1">
+            <i class="far fa-save"></i> Update Note
+        </button>
+    </footer>
 </form>
