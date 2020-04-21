@@ -10,6 +10,7 @@
         constructor(object, options) {
             super(object, options);
             this.numrows = 0;
+            this.hideshow = false;
         }
 
         static get defaultOptions() {
@@ -117,7 +118,6 @@
             super.activateListeners(html);
 
             //scene list onchange event
-            //html.find("select[name='sceneId']")[0].onchange = teleportpoint._onChange.bind(null,event,html);
             const notelist = html.find("select[name='sceneId']")[0];
             notelist.onchange = teleportpoint._onChange.bind(null,event,html);
 
@@ -170,6 +170,58 @@
                     this.numrows = this.numrows - 1;
                 }
             });
+
+            html.on('click', '.hideshow', ev => {
+                this.hideshow = !this.hideshow;
+                const stage = canvas.notes;
+                const captureBtn = $(ev.currentTarget);
+                const tab = captureBtn.parent().parent();
+                const teleportrows = tab.find('.teleportrow');
+                if (this.hideshow) {
+                    const style = new PIXI.TextStyle({
+                                                        fontFamily: "Arial",
+                                                        fontSize: 36,
+                                                        fill: "white",
+                                                        stroke: '#2F4F4F',
+                                                        strokeThickness: 4,
+                                                        dropShadow: true,
+                                                        dropShadowColor: "#000000",
+                                                        dropShadowBlur: 4,
+                                                        dropShadowAngle: Math.PI / 6,
+                                                        dropShadowDistance: 6
+                                                    });
+                    for (const t of teleportrows){
+                        const index = $(t).find('input[name=index]').val();
+                        const x = $(t).find('input[name=coordX]').val();
+                        const y = $(t).find('input[name=coordY]').val();
+                        const graphics = new PIXI.Graphics();
+                        const text = new PIXI.Text(index,style);
+                        text.name = "index";
+                        text.anchor.set(0.5);
+
+                        graphics.name = "offset";
+                        graphics.beginFill(0x708090);
+                        graphics.lineStyle(5, 0x2F4F4F);
+
+                        // draw a rectangle
+                        const coord = canvas.grid.getSnappedPosition(x,y);
+                        text.x=coord.x + canvas.grid.size/2;
+                        text.y=coord.y + canvas.grid.size/2;
+                        graphics.drawRect(coord.x, coord.y, canvas.grid.size, canvas.grid.size);
+                        
+                        stage.addChild(graphics);
+                        stage.addChild(text);
+                    }
+                }
+                else {
+                    for (const t of teleportrows) {
+                        const childtoremoveg = stage.getChildByName("index");
+                        stage.removeChild(childtoremoveg);
+                        const childtoremovet = stage.getChildByName("offset");
+                        stage.removeChild(childtoremovet);
+                    }
+                }
+            });
         }
 
         _getOffsets(){
@@ -192,6 +244,13 @@
         * @return {Promise}
         */
         async close() {
+            const stage = canvas.notes;
+            for (let i=0; i <= this.numrows; i++){
+                const childtoremoveg = stage.getChildByName("index");
+                stage.removeChild(childtoremoveg);
+                const childtoremovet = stage.getChildByName("offset");
+                stage.removeChild(childtoremovet);
+            }
             if ( !this.object.id ) canvas.notes.preview.removeChildren();
             return super.close();
         }
