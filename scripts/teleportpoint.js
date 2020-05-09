@@ -230,7 +230,7 @@
         */
 
         async _onMouseUp(event) {
-            event.stopPropagation();
+            //event.stopPropagation();
             if (event.button !== 1) return;
             const transform = canvas.tokens.worldTransform;
             const coord = {
