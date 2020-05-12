@@ -1,7 +1,7 @@
     Hooks.once("init", async function() {
         if (game.modules.get("furnace") && game.modules.get("furnace").active) {
-            FurnacePatching.replaceMethod(Note,"_onDoubleLeft",teleportpoint._onDoubleLeft);
-            FurnacePatching.replaceMethod(Note,"_onDoubleRight",teleportpoint._onDoubleRight);
+            FurnacePatching.replaceMethod(Note,"_onClickLeft2",teleportpoint._onDoubleLeft);
+            FurnacePatching.replaceMethod(Note,"_onClickRight2",teleportpoint._onDoubleRight);
 
             // Adding Icons for TeleportSheetConfig sheet
             CONFIG.Teleport = {
