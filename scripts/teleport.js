@@ -2,11 +2,6 @@
         if (game.modules.get("furnace") && game.modules.get("furnace").active) {
             FurnacePatching.replaceMethod(Note,"_onDoubleLeft",teleportpoint._onDoubleLeft);
             FurnacePatching.replaceMethod(Note,"_onDoubleRight",teleportpoint._onDoubleRight);
-            //This patch is to fix cases when the controlIcon of a note doesn't have a border defined.
-            const f = FurnacePatching.patchClass(PlaceableObject,PlaceableObject.prototype._onMouseOver,11,
-                "if ( this.controlIcon ) this.controlIcon.border.visible = true;",
-                "if ( this.controlIcon && this.controlIcon.border ) this.controlIcon.border.visible = true;");
-            FurnacePatching.replaceMethod(PlaceableObject,"_onMouseOver",f.prototype._onMouseOver);
 
             // Adding Icons for TeleportSheetConfig sheet
             CONFIG.Teleport = {
