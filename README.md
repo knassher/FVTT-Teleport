@@ -13,7 +13,7 @@ if tokens were selected before double clicking a teleportation point, these toke
 
 ### New Features
 * TP config sheet has a new tap called Offsets in which the user can save offsets (as many as you want) for the token when they teleported to that TP. To use this feature just controlle a token or tokens an move it/them to the desire possition, then hit the capture button.
-* The middle button of a mouse (wheel button) can be use to start a drag and drop workflow to teleport tokens, just controll a set of tokens, press the middle button and drag those tokens to a TP, once you drop the tokens over the TP those tokens will be teleported to the destination TP.
+* The left button of a mouse (wheel button) can be use to start a drag and drop workflow to teleport tokens, just controll a set of tokens, press the middle button and drag those tokens to a TP, once you drop the tokens over the TP those tokens will be teleported to the destination TP.
 * A new setting flag was added to the foundry's config to hide tokens from the departed scene when they are teleported to a different scene.
 * Added a button to the TP config sheet to highlight the offsets of the TP on the canvas as a visual help.
 
