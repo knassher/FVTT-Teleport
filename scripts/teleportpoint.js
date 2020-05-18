@@ -24,7 +24,7 @@
  *          }
  * });
  */
-    const TELEPORT_BUTTON = 1; //The middle button is the one that's going to be used for the drag&drop workflow to trigger
+    const TELEPORT_BUTTON = 0; //The middle button is the one that's going to be used for the drag&drop workflow to trigger
                            // a teleport event
 
     class TeleportPoint {
@@ -118,7 +118,9 @@
                 };
                 cont = cont + 1;
                 try {
+                    if (sameScene) canvas.tokens.get(t._id)._noAnimate = true;
                     await sceneTo.updateEmbeddedEntity("Token",data,options);
+                    if (sameScene) canvas.tokens.get(t._id)._noAnimate = false;
                     console.log("Teleport | Teleporting token: ", t.name,", to scene: ",sceneTo.name);
                 }
                 catch (err){}
@@ -165,6 +167,8 @@
                 await sceneTo.view();
             }
             await canvas.animatePan(arrival);
+            //add canvas event for hoverin
+            this._generateHoverInEvent();
             return notokens;
         }
         /* -------------------------------- Listeners ------------------------------- */
@@ -231,7 +235,7 @@
 
         async _onMouseUp(event) {
             //event.stopPropagation();
-            if (event.button !== 1) return;
+            if (event.button !== TELEPORT_BUTTON) return;
             const transform = canvas.tokens.worldTransform;
             const coord = {
                 x: (event.clientX - transform.tx) / canvas.stage.scale.x,
@@ -328,6 +332,15 @@
             }).render(true);
         }
 
+        /** Fires a Hover In Canvas event
+         *
+         */
+        _generateHoverInEvent() {
+            event = document.createEvent("HTMLEvents");
+            event.initEvent("mouseover", true, true);
+			event.data = {};
+            canvas.mouseInteractionManager._handleMouseOver(event);
+        }
         /** Hook that will pan the view of the PC on its token
          * @param data
         **/
