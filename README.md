@@ -13,9 +13,20 @@ if tokens were selected before double clicking a teleportation point, these toke
 
 ### New Features
 * TP config sheet has a new tap called Offsets in which the user can save offsets (as many as you want) for the token when they teleported to that TP. To use this feature just controlle a token or tokens an move it/them to the desire possition, then hit the capture button.
-* The left button of a mouse (wheel button) can be use to start a drag and drop workflow to teleport tokens, just controll a set of tokens, press the middle button and drag those tokens to a TP, once you drop the tokens over the TP those tokens will be teleported to the destination TP.
+* The middle button of a mouse (wheel button) can be use to start a drag and drop workflow to teleport tokens, just controll a set of tokens, press the middle button and drag those tokens to a TP, once you drop the tokens over the TP those tokens will be teleported to the destination TP.
 * A new setting flag was added to the foundry's config to hide tokens from the departed scene when they are teleported to a different scene.
 * Added a button to the TP config sheet to highlight the offsets of the TP on the canvas as a visual help.
+
+### Changelog
+## V 2.0.5
+* Fixed an issue with the TPConfig sheet that didn't render due to changes on FVTT core.
+* Fixed an issue that won't trigger TPoints that don't have a scene and/or destination set. 
+* A warning message was set up letting know the user that needs to set a scene and/or a destination note.
+* Fixed an issue with the toggle button for adding a TPoint, now only one dialog to collect the name of the TPoint will be render after a doble left click.
+* Fixed an issue capturing the position for the TPoint.
+* Now the TPConfig sheet will be rendered only if the "teleport" key is in the note's flag dictionary.
+* Now the TPoint will trigger only if the "teleport" key is in the note's flag dictionary.
+* Made some cleaning to the code.
 
 ### Dependencies
 Modules:
