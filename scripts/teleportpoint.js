@@ -24,7 +24,7 @@
  *          }
  * });
  */
-    const TELEPORT_BUTTON = 0; //The middle button is the one that's going to be used for the drag&drop workflow to trigger
+    const TELEPORT_BUTTON = 1; //The middle button is the one that's going to be used for the drag&drop workflow to trigger
                            // a teleport event
 
     class TeleportPoint {
@@ -60,7 +60,7 @@
 
         registerListeners(value) {
             if (value) {
-                    if (game.modules.get("pin-cushion") && game.modules.get("pin-cushion").active) canvas.stage.off("click");
+                    canvas.stage.off("click");
                     canvas.stage.on("click", event => this._onClickCanvas(event));
                 }
             else {
@@ -82,7 +82,6 @@
             const sceneToLoaded = sceneTo.options["loaded"];
             const sameScene = sceneTo._id === sceneFrom._id;
             const noteTo  = TeleportSheetConfig.getTeleportPoint(sceneId,noteId);
-            const offsets =  noteTo.flags.teleport.offsets || [];
             const foct = canvas.tokens.controlled.filter(t => t.owner === true); //owened controlled tokens
             const toct = sceneTo.getEmbeddedCollection("Token");
             const ptokens = TeleportSheetConfig.getTokenstoMove(foct,toct);
@@ -91,15 +90,18 @@
             const hide = game.settings.get("teleport","hidedepartingtokens");
             let arrival;
             let quadrants;
+			let offsets;
             canvas.tokens.releaseAll();
 
             //Getting destination point
             if (noteTo) {
                 arrival = { x:noteTo.x , y:noteTo.y, scale:1, duration: 10 };
+				offsets =  noteTo.flags.teleport.offsets || [];
             }
             else {
-                const dimensions = canvas.getDimensions(sceneTo.data);
+                const dimensions = canvas.constructor.getDimensions(sceneTo.data);
                 arrival = { x:dimensions.width / 2, y:dimensions.height / 2, scale:1, duration: 10  };
+				offsets =  [];
             }
             //Getting offsets for tokens
             if (onetoken) quadrants = TeleportSheetConfig.getTokenQuadrant(offsets,arrival.x,arrival.y);
@@ -191,39 +193,49 @@
         * @param {*} event
         */
         _onDoubleClick(event) {
-            const data = {
-                x: event.data.destination.x,
-                y: event.data.destination.y
-            };
-
-            this._createDialogST(data);
+			try {
+					let t = canvas.notes.worldTransform;
+					const tx = (event.data.originalEvent.clientX - t.tx) / canvas.stage.scale.x;
+					const ty = (event.data.originalEvent.clientY - t.ty) / canvas.stage.scale.y;
+					const [x, y] = canvas.grid.getCenter(tx, ty);
+					const data = {
+					x: x,
+					y: y
+				};
+				this._createDialogST(data);
+			}
+			catch (err){
+			}
         }
 
         async _onDoubleLeft(event) {
-            const sceneTo = this.getFlag("teleport", "sceneTo");
-            const noteTo =  this.getFlag("teleport", "noteTo");
-            if (sceneTo) { //If is a transition note then send player to transition point.
-                const result = await teleportpoint.teleportTokens(sceneTo,noteTo,1);
-                //for (const user of game.users.entities.filter(u => u.id !== game.user.id)) await game.socket.emit("pullToScene", sceneTo, user.id);
-                await game.socket.emit("module.teleport", {scene:sceneTo,note:noteTo,result:result,userId:game.user.id}, resp => {});
-            }
-            else {//If is a regular note, open journalentry sheet.
-                const entry = this.entry;
-                if ( entry ) entry.sheet.render(true);
-            }
+			if (!("teleport" in this.data.flags)){//If is a regular note, open journalentry sheet.
+				const entry = this.entry;
+				if ( entry ) entry.sheet.render(true);
+			}
+			else{
+				const sceneTo = this.getFlag("teleport", "sceneTo");
+				const noteTo =  this.getFlag("teleport", "noteTo");
+				if (sceneTo) { //If is a transition note then send player to transition point.
+					const result = await teleportpoint.teleportTokens(sceneTo,noteTo,1);
+					await game.socket.emit("module.teleport", {scene:sceneTo,note:noteTo,result:result,userId:game.user.id}, resp => {});
+				}
+				else {
+					ui.notifications.warn("A TeleportPoint is not config, please open the TPConfig sheet and set a Scene and/or Note.");
+				}
+			}
         }
 
         /** @override */
         _onDoubleRight(event) {
-            let sheet;
-            const sceneTo = this.getFlag("teleport", "sceneTo");
-            if (sceneTo && sceneTo !== "") {
-                sheet = new TeleportSheetConfig(this);
-            }
-            else {
-                sheet = this.sheet;
-            }
-            if ( sheet ) sheet.render(true);
+			let sheet;
+			if (!("teleport" in this.data.flags)){//If is a regular note, open journalentry sheet.
+				sheet = this.sheet;
+			}
+			else{
+				sheet = new TeleportSheetConfig(this);
+			}
+			if ( sheet ) sheet.render(true);
         }
 
         /**
@@ -250,7 +262,6 @@
                 const sceneTo = note.getFlag("teleport", "sceneTo");
                 const noteTo =  note.getFlag("teleport", "noteTo");
                 const result = await teleportpoint.teleportTokens(sceneTo,noteTo,1);
-                //for (const user of game.users.entities.filter(u => u.id !== game.user.id)) await game.socket.emit("pullToScene", sceneTo, user.id);
                 await game.socket.emit("module.teleport", {scene:sceneTo,note:noteTo,result:result,userId:game.user.id}, resp => {});
             }
         }
@@ -316,7 +327,9 @@
                                 if ( !canvas.grid.hitArea.contains(data.x, data.y) ) return;
 
                                 // Create a NoteConfig sheet instance to finalize the creation
-                                const note = canvas.activeLayer.preview.addChild(new Note(data).draw());
+								canvas.notes.activate()
+                                const note = canvas.activeLayer.preview.addChild(new Note(data));
+								await note.draw();
                                 const sheet = new TeleportSheetConfig(note);
                                 sheet.render(true);
                             }
