@@ -96,7 +96,7 @@
         if (!scene.options["loaded"]) {
             await game.scenes.preload(sceneTo)
             scene.options["loaded"] = true;
-            console.log("Teleport | Scene ", scene.name ," was preloaded.");
+            console.log("Teleport | Scene ", scene.data.navName ," was preloaded."); // May not be necessary to change this as it is in the console, not a popup
         }
         if (canvas.scene._id !== scene._id){
             setTimeout(async () => {
@@ -106,7 +106,7 @@
                 await canvas.animatePan({x:note.x,y:note.y,scale:1,duration:10});
                 }, 5000);
         }
-        ui.notifications.info("Your DM has teleported your token to the scene " + scene.name + ", wait until is completed.");
+        ui.notifications.info("Your DM has teleported your token to the scene " + scene.data.navName + ", wait until is completed.");
     });
 
     async function loadTPIcons() {
