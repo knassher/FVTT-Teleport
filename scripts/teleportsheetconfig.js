@@ -58,20 +58,6 @@
         /* -------------------------------------------- */
 
         /**
-        * Register game settings used by the SceneTransitionLayer
-        */
-        static registerSettings() {
-            game.settings.register("teleport", "hidedepartingtokens", {
-                name: "Hide Departing Tokens",
-                hint: "Hide tokens on the original scene when you teleport them to a new one.",
-                scope: "world",
-                type: Boolean,
-                config: true,
-                default: false
-            });
-        }
-
-        /**
         * This method is called upon form submission after form data is validated
         * @param event {Event}       The initial triggering submission event
         * @param formData {Object}   The object of validated form data with which to update the object
@@ -208,7 +194,7 @@
                         text.x=coord.x + canvas.grid.size/2;
                         text.y=coord.y + canvas.grid.size/2;
                         graphics.drawRect(coord.x, coord.y, canvas.grid.size, canvas.grid.size);
-                        
+
                         stage.addChild(graphics);
                         stage.addChild(text);
                     }

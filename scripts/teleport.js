@@ -1,48 +1,56 @@
     Hooks.once("init", async function() {
-        if (game.modules.get("furnace") && game.modules.get("furnace").active) {
-            FurnacePatching.replaceMethod(Note,"_onClickLeft2",teleportpoint._onDoubleLeft);
-            FurnacePatching.replaceMethod(Note,"_onClickRight2",teleportpoint._onDoubleRight);
+        Note.prototype._onClickLeft2 = teleportpoint._onDoubleLeft
+        Note.prototype._onClickRight2 = teleportpoint._onDoubleRight
+        // Adding Icons for TeleportSheetConfig sheet
+        CONFIG.Teleport = {
+                                    noteIcons: {
+                                      "Bridge": "modules/teleport/icons/bridge.svg",
+                                      "Cave": "modules/teleport/icons/cave.svg",
+                                      "Castle": "modules/teleport/icons/castle.svg",
+                                      "City": "modules/teleport/icons/city.svg",
+                                      "House": "modules/teleport/icons/house.svg",
+                                      "Ladder": "modules/teleport/icons/ladder.svg",
+                                      "Mountain": "modules/teleport/icons/mountain.svg",
+                                      "Oak Tree": "modules/teleport/icons/oak.svg",
+                                      "Obelisk": "modules/teleport/icons/obelisk.svg",
+                                      "Ruins": "modules/teleport/icons/ruins.svg",
+                                      "Statue": "modules/teleport/icons/statue.svg",
+                                      "Stairs": "modules/teleport/icons/3d-stairs.svg",
+                                      "Temple": "modules/teleport/icons/temple.svg",
+                                      "Tower": "modules/teleport/icons/tower.svg",
+                                      "Village": "modules/teleport/icons/village.svg",
+                                      "Waterfall": "modules/teleport/icons/waterfall.svg",
+                                      "Windmill": "modules/teleport/icons/windmill.svg",
+                                      "Wooden Door": "modules/teleport/icons/wooden-door.svg"
+                                    },
+                                    defaultIcon: "modules/teleport/icons/3d-stairs.svg"
+                        };
+        game.teleport = {
+                            tp: teleportpoint
+                        };
+        //Load icons used on the TP sheet config.
+        await loadTPIcons();
 
-            // Adding Icons for TeleportSheetConfig sheet
-            CONFIG.Teleport = {
-                                        noteIcons: {
-                                          "Bridge": "modules/teleport/icons/bridge.svg",
-                                          "Cave": "modules/teleport/icons/cave.svg",
-                                          "Castle": "modules/teleport/icons/castle.svg",
-                                          "City": "modules/teleport/icons/city.svg",
-                                          "House": "modules/teleport/icons/house.svg",
-                                          "Ladder": "modules/teleport/icons/ladder.svg",
-                                          "Mountain": "modules/teleport/icons/mountain.svg",
-                                          "Oak Tree": "modules/teleport/icons/oak.svg",
-                                          "Obelisk": "modules/teleport/icons/obelisk.svg",
-                                          "Ruins": "modules/teleport/icons/ruins.svg",
-                                          "Statue": "modules/teleport/icons/statue.svg",
-                                          "Stairs": "modules/teleport/icons/3d-stairs.svg",
-                                          "Temple": "modules/teleport/icons/temple.svg",
-                                          "Tower": "modules/teleport/icons/tower.svg",
-                                          "Village": "modules/teleport/icons/village.svg",
-                                          "Waterfall": "modules/teleport/icons/waterfall.svg",
-                                          "Windmill": "modules/teleport/icons/windmill.svg",
-                                          "Wooden Door": "modules/teleport/icons/wooden-door.svg"
-                                        },
-                                        defaultIcon: "modules/teleport/icons/3d-stairs.svg"
-                            };
-            game.Teleport = {
-                                point: teleportpoint,
-                                getTeleportPoints: TeleportSheetConfig.getTeleportPoints,
-                                getTeleportPoint: TeleportSheetConfig.getTeleportPoint,
-                                getTokensQuadrant: TeleportSheetConfig.getTokensQuadrant,
-                                getQuadrants: TeleportSheetConfig.getQuadrants,
-                                getTokenstoMove: TeleportSheetConfig.getTokenstoMove
-                            };
-            await loadTPIcons();
-            TeleportSheetConfig.registerSettings();
-            console.log(`Teleport | Initializing Teleport module for FoundryVTT is completed.`);
-        }
-        else {
-            console.log(`Teleport | Furnace module not enabled, Teleport module not loaded.`);
-            ui.notifications.error("Please install Furnace if you want to use Teleport.")
-        }
+        //Register settings
+        game.settings.register("teleport", "hidedepartingtokens", {
+            name: "Hide Departing Tokens",
+            hint: "Hide tokens on the original scene when you teleport them to a new one.",
+            scope: "world",
+            type: Boolean,
+            config: true,
+            default: false
+        });
+
+        game.settings.register("teleport", "toggleaddtpbutton", {
+          name: "Toggle Add TP",
+          hint: "Keep track of the Add TP button's state",
+          scope: "client",
+          config: false,
+          default: false,
+          type: Boolean
+        });
+
+        console.log(`Teleport | Initializing Teleport module for FoundryVTT is completed.`);
     });
 
     /**
@@ -65,7 +73,28 @@
     * Hook that set the "Add Teleport Point on the Note controls bar"
     **/
     Hooks.on('getSceneControlButtons', controls => {
-        teleportpoint.getSceneControlButtons(controls);
+        let noteButton = controls.find(b => b.name === "notes");
+
+        if (noteButton) {
+            noteButton.tools.push({
+                name: "teleportation",
+                title: "Toggle Add Teleportation Point",
+                icon: "fab fa-firstdraft",
+                toggle: true,
+                active: game.settings.get("teleport","toggleaddtpbutton"),
+                visible: game.user.isGM,
+                onClick: (value) => {
+                    game.settings.set("teleport","toggleaddtpbutton", !(game.settings.get("teleport","toggleaddtpbutton")));
+                if (game.settings.get("teleport","toggleaddtpbutton")) {
+                    this._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2
+                    NotesLayer.prototype._onClickLeft2 = teleportpoint._onDoubleClick;
+                }
+                else {
+                    NotesLayer.prototype._onClickLeft2 = teleportpoint._oldOnClickLeft2;
+                }
+                    }
+                });
+        }
     });
 
     /**
@@ -74,14 +103,6 @@
 
     Hooks.on("deleteNote", (scene, sceneId, data, options, userId) =>{
         return canvas.activeLayer._hover ? canvas.activeLayer._hover = null : null;
-    });
-
-    /**
-    * Hooks fired on the player side when the position of a existing token is updated, also the hooks
-    * center the player's view on the teleported token.
-    **/
-    Hooks.on("updateToken", async (scene, sceneId, data, options, userId) => {
-        //console.log("DEBUG TELEPORT | updateToken",sceneId,data,options);
     });
 
     /**

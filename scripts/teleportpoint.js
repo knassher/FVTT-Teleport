@@ -28,29 +28,13 @@
                            // a teleport event
 
     class TeleportPoint {
-
+        constructor() {
+            this._oldOnClickLeft2 = null;
+        }
         get captureDialog() {
             return {
                 content: `<div class="form-group"><p class="notes">Enter a name:</p></label><input name="name" type="text"></div></br>`,
                 title: "Teleportation Point Name"
-            }
-        }
-
-        getSceneControlButtons(buttons) {
-            let noteButton = buttons.find(b => b.name === "notes");
-
-            if (noteButton) {
-                noteButton.tools.push({
-                    name: "teleportation",
-                    title: "Toggle Add Teleportation Point",
-                    icon: "fab fa-firstdraft",
-                    toggle: true,
-                    active: false,
-                    visible: game.user.isGM,
-                    onClick: (value) => {
-                        this.registerListeners(value);
-                    }
-                });
             }
         }
 
@@ -60,15 +44,11 @@
 
         registerListeners(value) {
             if (value) {
-                    canvas.stage.off("click");
-                    canvas.stage.on("click", event => this._onClickCanvas(event));
-                }
+                this._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2
+                NotesLayer.prototype._onClickLeft2 = this._onDoubleClick;
+            }
             else {
-                canvas.stage.off("click");
-                if (game.modules.get("pin-cushion") && game.modules.get("pin-cushion").active) {
-                    const pc = new PinCushion();
-                    canvas.stage.on("click", event => pc._onClickCanvas(event));
-                }
+                NotesLayer.prototype._onClickLeft2 = this._oldOnClickLeft2;
             }
         }
 
@@ -170,29 +150,17 @@
             }
             await canvas.animatePan(arrival);
             //add canvas event for hoverin
-            this._generateHoverInEvent();
+            this.generateCanvasHoverInEvent();
             return notokens;
         }
         /* -------------------------------- Listeners ------------------------------- */
-
-        /**
-        * Handles canvas clicks on NoteLayer, this click will capture the position for the TP
-        **/
-        _onClickCanvas(event) {
-            const now = Date.now();
-            if (canvas.activeLayer.name !== "NotesLayer" || canvas.activeLayer._hover) return;
-
-            // If the click is less than 250ms since the last clicktime, it must be a doubleclick
-            if (now - event.data.clickTime < 250) this._onDoubleClick(event);
-            // Set clickTime to enable doubleclick detection
-            event.data.clickTime = now;
-        }
 
         /**
         * Handles doubleclicks left and right
         * @param {*} event
         */
         _onDoubleClick(event) {
+            if (canvas.activeLayer.name !== "NotesLayer" || canvas.activeLayer._hover) return;
 			try {
 					let t = canvas.notes.worldTransform;
 					const tx = (event.data.originalEvent.clientX - t.tx) / canvas.stage.scale.x;
@@ -202,7 +170,7 @@
 					x: x,
 					y: y
 				};
-				this._createDialogST(data);
+				teleportpoint._createDialogST(data);
 			}
 			catch (err){
 			}
@@ -246,7 +214,6 @@
         */
 
         async _onMouseUp(event) {
-            //event.stopPropagation();
             if (event.button !== TELEPORT_BUTTON) return;
             const transform = canvas.tokens.worldTransform;
             const coord = {
@@ -343,12 +310,13 @@
                 },
                 default: "save"
             }).render(true);
+            teleportpoint.generateCanvasHoverInEvent();
         }
 
         /** Fires a Hover In Canvas event
          *
          */
-        _generateHoverInEvent() {
+        generateCanvasHoverInEvent() {
             event = document.createEvent("HTMLEvents");
             event.initEvent("mouseover", true, true);
 			event.data = {};
