@@ -41,7 +41,7 @@ if tokens were selected before double clicking a teleportation point, these toke
 
 ### Dependencies
 Modules:
-Not at the moment
+None at the moment
 
 ### Known Issues
 * The TP config sheet doesn't resize automatically when the content surpass the limits of the form.
