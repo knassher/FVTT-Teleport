@@ -85,15 +85,15 @@
                 visible: game.user.isGM,
                 onClick: (value) => {
                     game.settings.set("teleport","toggleaddtpbutton", !(game.settings.get("teleport","toggleaddtpbutton")));
-                if (game.settings.get("teleport","toggleaddtpbutton")) {
-                    this._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2
-                    NotesLayer.prototype._onClickLeft2 = teleportpoint._onDoubleClick;
-                }
-                else {
-                    NotesLayer.prototype._onClickLeft2 = teleportpoint._oldOnClickLeft2;
-                }
+                    if (game.settings.get("teleport","toggleaddtpbutton")) {
+                        teleportpoint._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2
+                        NotesLayer.prototype._onClickLeft2 = teleportpoint._onDoubleClick;
                     }
-                });
+                    else {
+                        NotesLayer.prototype._onClickLeft2 = teleportpoint._oldOnClickLeft2;
+                    }
+                }
+            });
         }
     });
 

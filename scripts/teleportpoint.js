@@ -29,7 +29,7 @@
 
     class TeleportPoint {
         constructor() {
-            this._oldOnClickLeft2 = null;
+            this._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2;
         }
         get captureDialog() {
             return {
