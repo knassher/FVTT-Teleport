@@ -41,7 +41,10 @@ if tokens were selected before double clicking a teleportation point, these toke
 
 ### Dependencies
 Modules:
-  1.- The Furnace - Autor: KaKaRoTo (https://github.com/kakaroto/fvtt-module-furnace)
+Not at the moment
+
+### Known Issues
+* The TP config sheet doesn't resize automatically when the content surpass the limits of the form.
   
 ### Special Thanks
 The code is based on the pin-cushion module from Evan Clark [errational#2007] (https://github.com/death-save/pin-cushion).
