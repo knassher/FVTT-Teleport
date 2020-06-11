@@ -1,6 +1,9 @@
     Hooks.once("init", async function() {
         Note.prototype._onClickLeft2 = teleportpoint._onDoubleLeft
         Note.prototype._onClickRight2 = teleportpoint._onDoubleRight
+        KeyboardManager.prototype._handleMovement = teleportpoint._handleMovement;
+        Token.prototype.animateMovement = teleportpoint._animateMovement;
+
         // Adding Icons for TeleportSheetConfig sheet
         CONFIG.Teleport = {
                                     noteIcons: {
@@ -119,15 +122,20 @@
             scene.options["loaded"] = true;
             console.log("Teleport | Scene ", scene.data.navName ," was preloaded."); // May not be necessary to change this as it is in the console, not a popup
         }
+        const note = scene.getEmbeddedEntity("Note",noteTo);
         if (canvas.scene._id !== scene._id){
             setTimeout(async () => {
-                console.log("Waiting!");
                 await scene.view();
-                const note = scene.getEmbeddedEntity("Note",noteTo);
                 await canvas.animatePan({x:note.x,y:note.y,scale:1,duration:10});
-                }, 5000);
+                }, 6000);
+            ui.notifications.info("Your DM has teleported your token to the scene " + scene.data.navName + ", wait until is completed.");
         }
-        ui.notifications.info("Your DM has teleported your token to the scene " + scene.data.navName + ", wait until is completed.");
+        else {
+            setTimeout(async () => {
+                await canvas.animatePan({x:note.x,y:note.y,scale:1,duration:10});
+                }, 3000);
+            ui.notifications.info("Your DM has teleported your token to " + note.text + ", wait until is completed.");
+        }
     });
 
     async function loadTPIcons() {

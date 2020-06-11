@@ -30,6 +30,7 @@
     class TeleportPoint {
         constructor() {
             this._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2;
+            this.animateMovement = Token.prototype.animateMovement;
         }
         get captureDialog() {
             return {
@@ -40,16 +41,6 @@
 
         socketListeners(socket) {
             socket.on("module.teleport",data => this._callHook(data));
-        }
-
-        registerListeners(value) {
-            if (value) {
-                this._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2
-                NotesLayer.prototype._onClickLeft2 = this._onDoubleClick;
-            }
-            else {
-                NotesLayer.prototype._onClickLeft2 = this._oldOnClickLeft2;
-            }
         }
 
         async teleportTokens(sceneId,noteId,type=1){
@@ -100,12 +91,14 @@
                 };
                 cont = cont + 1;
                 try {
-                    if (sameScene) canvas.tokens.get(t._id)._noAnimate = true;
+                    if (sameScene) await canvas.tokens.get(t._id).setFlag("teleport","noanimate",true);
                     await sceneTo.updateEmbeddedEntity("Token",data,options);
-                    if (sameScene) canvas.tokens.get(t._id)._noAnimate = false;
                     console.log("Teleport | Teleporting token: ", t.name,", to scene: ",sceneTo.name);
                 }
                 catch (err){}
+                finally {
+                    if (sameScene) await canvas.tokens.get(t._id).setFlag("teleport","noanimate",false);
+                }
             });
             //...Create missing tokens in the scene
             $.each(ptokens[1], async function(i,t) {
@@ -135,7 +128,6 @@
                     catch(err){}
                 });
             }
-
             // Scene Transition
             if (game.user.isGM && !sameScene && !sceneToLoaded) {
                 let preloaded = await game.scenes.preload(sceneTo._id);
@@ -149,6 +141,7 @@
                 await sceneTo.view();
             }
             await canvas.animatePan(arrival);
+
             //add canvas event for hoverin
             this.generateCanvasHoverInEvent();
             return notokens;
@@ -222,9 +215,6 @@
             };
             const hit = TeleportSheetConfig.checkCollision(coord,canvas.scene.id);
             if (hit) {
-                $.each(canvas.tokens.controlled, async function(i,t) {
-                    t._noAnimate = true;
-                });
                 const note = canvas.notes.get(hit);
                 const sceneTo = note.getFlag("teleport", "sceneTo");
                 const noteTo =  note.getFlag("teleport", "noteTo");
@@ -233,6 +223,73 @@
             }
         }
 
+        async _handleMovement(event, layer) {
+            if ( !game.keyboard._moveKeys.size ) return;
+
+            // Get controlled objects
+            let objects = layer.placeables.filter(o => o._controlled);
+            if ( objects.length === 0 ) return;
+
+            // Define movement offsets and get moved directions
+            const directions = game.keyboard._moveKeys;
+            let dx = 0;
+            let dy = 0;
+
+            // Assign movement offsets
+            if ( directions.has("left") ) dx -= 1;
+            if ( directions.has("up") ) dy -= 1;
+            if ( directions.has("right") ) dx += 1;
+            if ( directions.has("down") ) dy += 1;
+            game.keyboard._moveKeys.clear();
+
+            // Perform the shift or rotation
+            await layer.moveMany({dx, dy, rotate: event.shiftKey});
+
+            //Check if a controlled token hits with a TP
+            if (layer.name === "TokenLayer") {
+                $.each(objects, async function(index,token) {
+                    const coord = {
+                        x: token.center.x,
+                        y: token.center.y
+                    };
+                    const hit = TeleportSheetConfig.checkCollision(coord,canvas.scene.id);
+                    if (hit) {
+                        const note = canvas.notes.get(hit);
+                        const sceneTo = note.getFlag("teleport", "sceneTo");
+                        const noteTo =  note.getFlag("teleport", "noteTo");
+                        const result = await teleportpoint.teleportTokens(sceneTo,noteTo,1);
+                        await game.socket.emit("module.teleport", {scene:sceneTo,note:noteTo,result:result,userId:game.user.id}, resp => {});
+                        return true;
+                    }
+                });
+            }
+        }
+        /**
+        * Animate Token movement along a certain path which is defined by a Ray object
+        * @param {Ray} ray   The path along which to animate Token movement
+        */
+        async _animateMovement(ray) {
+
+            // Move distance is 10 spaces per second
+            this._movement = ray;
+            let speed = canvas.dimensions.size * 10;
+            let duration;
+            if (this.getFlag("teleport","noanimate"))
+                duration = 1;
+            else
+                duration = (ray.distance * 1000) / speed;
+
+            // Define attributes
+            const attributes = [
+                { parent: this, attribute: 'x', to: ray.B.x },
+                { parent: this, attribute: 'y', to: ray.B.y }
+            ];
+
+            // Trigger the animation function
+            let animationName = `Token.${this.id}.animateMovement`;
+            await CanvasAnimation.animateLinear(attributes, { name: animationName, context: this, duration: duration });
+            this._movement = null;
+        }
         /**
         * Handles the onchange event of the Scene select field and populates the Notes select field with the TP
         * of the selected scene.
