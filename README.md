@@ -18,6 +18,10 @@ if tokens were selected before double clicking a teleportation point, these toke
 * Added a button to the TP config sheet to highlight the offsets of the TP on the canvas as a visual help.
 
 ### Changelog
+## V 2.0.8
+* Now the animation movement for the token is disable when is teleported.
+* Now when a token collisions with a TP when is moved using the arrows keys the TP is triggered.
+
 ## V 2.0.7
 * Added compatibility for FVTT 0.6.2
 * Fixed some compatibility issues with Pin Cushion module.
