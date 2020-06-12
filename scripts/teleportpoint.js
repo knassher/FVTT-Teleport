@@ -146,10 +146,15 @@
             await canvas.animatePan(arrival);
 
             //control all teletransported tokens
-            canvas.tokens.releaseAll();
-            $.each(ttokens, async function(i,t) {
-                canvas.tokens.get(t).control({releaseOthers: false});
-            });
+            try {
+                canvas.tokens.releaseAll();
+                $.each(ttokens, async function(i,t) {
+                    canvas.tokens.get(t).control({releaseOthers: false});
+                });
+            }
+            catch (err) {
+            }
+
             //add canvas event for hoverin
             this.generateCanvasHoverInEvent();
             return notokens;
