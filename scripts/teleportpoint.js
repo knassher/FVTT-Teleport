@@ -56,6 +56,7 @@
             const foct = canvas.tokens.controlled.filter(t => t.owner === true); //owened controlled tokens
             const toct = sceneTo.getEmbeddedCollection("Token");
             const ptokens = TeleportSheetConfig.getTokenstoMove(foct,toct);
+            const ttokens = [];
             const notokens = foct.length === 0;
             const onetoken = foct.length === 1;
             const hide = game.settings.get("teleport","hidedepartingtokens");
@@ -89,6 +90,7 @@
                     y: coords.y,
                     hidden:false
                 };
+                ttokens.push(data._id);
                 cont = cont + 1;
                 try {
                     if (sameScene) await canvas.tokens.get(t._id).setFlag("teleport","noanimate",true);
@@ -110,7 +112,8 @@
                 delete data._id
                 cont = cont + 1;
                 try {
-                    await sceneTo.createEmbeddedEntity("Token",data,options);
+                    const newtoken = await sceneTo.createEmbeddedEntity("Token",data,options);
+                    ttokens.push(newtoken._id);
                     console.log("Teleport | Teleporting token: ", t.name,", to scene: ",sceneTo.name);
                 }
                 catch (err) {}
@@ -142,6 +145,11 @@
             }
             await canvas.animatePan(arrival);
 
+            //control all teletransported tokens
+            canvas.tokens.releaseAll();
+            $.each(ttokens, async function(i,t) {
+                canvas.tokens.get(t).control({releaseOthers: false});
+            });
             //add canvas event for hoverin
             this.generateCanvasHoverInEvent();
             return notokens;
