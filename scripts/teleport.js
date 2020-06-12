@@ -62,6 +62,8 @@
     Hooks.once("ready", () => {
         const board = $(document.getElementById("board"));
         board.on("mouseup",e => teleportpoint._onMouseUp(e));
+        teleportpoint._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2;
+        game.settings.set("teleport","toggleaddtpbutton",false);
         teleportpoint.socketListeners(game.socket);
     });
 
@@ -89,7 +91,6 @@
                 onClick: (value) => {
                     game.settings.set("teleport","toggleaddtpbutton", !(game.settings.get("teleport","toggleaddtpbutton")));
                     if (game.settings.get("teleport","toggleaddtpbutton")) {
-                        teleportpoint._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2
                         NotesLayer.prototype._onClickLeft2 = teleportpoint._onDoubleClick;
                     }
                     else {

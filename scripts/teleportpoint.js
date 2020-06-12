@@ -364,7 +364,7 @@
                                 if ( !canvas.grid.hitArea.contains(data.x, data.y) ) return;
 
                                 // Create a NoteConfig sheet instance to finalize the creation
-								canvas.notes.activate()
+								canvas.notes.activate();
                                 const note = canvas.activeLayer.preview.addChild(new Note(data));
 								await note.draw();
                                 const sheet = new TeleportSheetConfig(note);
