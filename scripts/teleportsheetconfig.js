@@ -96,6 +96,9 @@
                 tpjournal = await TeleportSheetConfig.createTPJournalEntry(formData["text"],folder);
                 formData["entryId"] = tpjournal.id;
             }
+            else{
+                game.journal.get(formData["entryId"]).update({name:formData["text"]});
+            }
 
             if ( this.object.id ) {
                 formData["id"] = this.object.id;
