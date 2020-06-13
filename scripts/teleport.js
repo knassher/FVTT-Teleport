@@ -52,6 +52,7 @@
           default: false,
           type: Boolean
         });
+        game.settings.set("teleport","toggleaddtpbutton",false);
 
         console.log(`Teleport | Initializing Teleport module for FoundryVTT is completed.`);
     });
@@ -59,11 +60,12 @@
     /**
     * Hook that set the mouseUp handler for the board div.
     **/
-    Hooks.once("ready", () => {
+    Hooks.once("ready", async() => {
+        const folder = await createTeleportFolder();
+        await createTeleportationJournal(folder);
         const board = $(document.getElementById("board"));
         board.on("mouseup",e => teleportpoint._onMouseUp(e));
         teleportpoint._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2;
-        game.settings.set("teleport","toggleaddtpbutton",false);
         teleportpoint.socketListeners(game.socket);
     });
 
@@ -145,4 +147,26 @@
         toLoad = toLoad.concat(Object.values(CONFIG.Teleport.noteIcons));
 
         return TextureLoader.loader.load(toLoad, {message: `Loading Teleport Points Icons`});
+    }
+
+    async function createTeleportFolder(){
+        let tpfolder = game.folders.entities.find(f => f.data.name === "Teleport Points");
+        if (!tpfolder) tpfolder = await Folder.create(
+                {
+                        name: "Teleport Points",
+                        type: "JournalEntry",
+                        parent: null
+                        },
+                        { displaySheet: false }
+                     );
+        return tpfolder
+    }
+
+    async function createTeleportationJournal(folder){
+        let entry = game.journal.entities.find(t => t.name === "Teleportation");
+        if (!entry)
+            entry = await JournalEntry.create({name: "Teleportation",folder: folder.id});
+        else
+            await entry.update({folder: folder.id});
+        return entry;
     }

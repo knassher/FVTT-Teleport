@@ -63,7 +63,7 @@
         * @param formData {Object}   The object of validated form data with which to update the object
         * @private
         */
-        _updateObject(event, formData) {
+        async _updateObject(event, formData) {
             const offsets = [];
             if ("coordX" in formData) {
                 if (this.numrows===1){
@@ -88,6 +88,14 @@
             delete formData["idText"];
             if ("coordX" in formData) delete formData["coordX"];
             if ("coordY" in formData) delete formData["coordY"];
+
+            //create new folder for the scene and add new journal
+            const folder = await TeleportSheetConfig.createSceneFolder();
+            let tpjournal = game.journal.entities.find(t => t.name === "Teleportation");
+            if (formData["entryId"] === tpjournal.id || !(game.journal.get(formData["entryId"]))) {
+                tpjournal = await TeleportSheetConfig.createTPJournalEntry(formData["text"],folder);
+                formData["entryId"] = tpjournal.id;
+            }
 
             if ( this.object.id ) {
                 formData["id"] = this.object.id;
@@ -349,5 +357,25 @@
                 if (hit) return tp.id;
             }
             return;
+        }
+
+        static async createSceneFolder() {
+            const tpfolder = game.folders.entities.find((f) => f.data.name === "Teleport Points");
+            let scenefolder = game.folders.entities.find((f) => f.data.name === canvas.scene.data.navName ||
+                                                                               f.data.name === canvas.scene.data.name);
+            if (!scenefolder) scenefolder = await Folder.create(
+                        {
+                                name: canvas.scene.data.navName || canvas.scene.data.name,
+                                type: "JournalEntry",
+                                parent: tpfolder.id
+                                },
+                            { displaySheet: false }
+                            );
+            return scenefolder;
+        }
+
+        static async createTPJournalEntry(name,folder){
+            const journal = await JournalEntry.create({name: name, folder: folder.id});
+            return journal;
         }
     }

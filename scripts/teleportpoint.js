@@ -183,7 +183,7 @@
         }
 
         async _onDoubleLeft(event) {
-			if (!("teleport" in this.data.flags)){//If is a regular note, open journalentry sheet.
+			if (!("teleport" in this.data.flags) || game.keyboard.isDown("Shift")){//If is a regular note, open journalentry sheet.
 				const entry = this.entry;
 				if ( entry ) entry.sheet.render(true);
 			}
@@ -338,7 +338,6 @@
                             const input = e.find("input[name='name']");
                             if(input[0].value) {
                                 let entry = game.journal.entities.find(t => t.name === "Teleportation");
-                                if (!entry) entry = await JournalEntry.create({name: "Teleportation"});
 
                                 // Create Note data
                                 const data = {
