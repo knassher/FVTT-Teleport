@@ -155,8 +155,8 @@
             catch (err) {
             }
 
-            //add canvas event for hoverin
-            this.generateCanvasHoverInEvent();
+            //finally activate tokens layer
+            canvas.tokens.activate();
             return notokens;
         }
         /* -------------------------------- Listeners ------------------------------- */
@@ -379,18 +379,8 @@
                 },
                 default: "save"
             }).render(true);
-            teleportpoint.generateCanvasHoverInEvent();
         }
 
-        /** Fires a Hover In Canvas event
-         *
-         */
-        generateCanvasHoverInEvent() {
-            event = document.createEvent("HTMLEvents");
-            event.initEvent("mouseover", true, true);
-			event.data = {};
-            canvas.mouseInteractionManager._handleMouseOver(event);
-        }
         /** Hook that will pan the view of the PC on its token
          * @param data
         **/
