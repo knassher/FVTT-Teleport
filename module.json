@@ -3,7 +3,7 @@
     "title": "Teleport",
     "description": "<p>With Teleport you can move a token between two points of a scene or between scenes.</p>",
     "author": "knassher",
-    "version": "2.1.2",
+    "version": "2.1.3",
     "minimumCoreVersion": "0.6.2",
     "compatibleCoreVersion":"0.6.4",
     "socket": true,
@@ -17,5 +17,5 @@
       ],
     "url": "https://github.com/knassher/FVTT-Teleport",
     "manifest": "https://raw.githubusercontent.com/knassher/FVTT-Teleport/master/module.json",
-    "download": "https://github.com/knassher/FVTT-Teleport/raw/master/packages/teleport.2.1.2.zip"
+    "download": "https://github.com/knassher/FVTT-Teleport/raw/master/packages/teleport.2.1.3.zip"
 }
