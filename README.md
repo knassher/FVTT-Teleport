@@ -18,8 +18,14 @@ if tokens were selected before double clicking a teleportation point, these toke
 * Added a button to the TP config sheet to highlight the offsets of the TP on the canvas as a visual help.
 
 ### Changelog
+## V 2.1.3
+* Fixed an issue with the panning when a token was teleported too quickly on a same scene.
+
 ## V 2.1.2
 * Added compatibility with Foundry VTT version 0.6.4
+
+## V 2.1.1
+* Added some minor improvements and cleaning of the code.
 
 ## V 2.1.0
 * Fixed some compatibility issues with other modules
