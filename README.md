@@ -18,6 +18,9 @@ if tokens were selected before double clicking a teleportation point, these toke
 * Added a button to the TP config sheet to highlight the offsets of the TP on the canvas as a visual help.
 
 ### Changelog
+## V 2.1.4
+* Disabled autoscrolling for middle button of the mouse.
+
 ## V 2.1.3
 * Fixed an issue with the panning when a token was teleported too quickly on a same scene.
 
