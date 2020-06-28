@@ -3,6 +3,7 @@
         Note.prototype._onClickRight2 = teleportpoint._onDoubleRight
         KeyboardManager.prototype._handleMovement = teleportpoint._handleMovement;
         Token.prototype.animateMovement = teleportpoint._animateMovement;
+        Token.prototype.setPosition = teleportpoint._setPosition;
 
         // Adding Icons for TeleportSheetConfig sheet
         CONFIG.Teleport = {
@@ -65,6 +66,7 @@
         await createTeleportationJournal(folder);
         const board = $(document.getElementById("board"));
         board.on("mouseup",e => teleportpoint._onMouseUp(e));
+		board.on("mousedown", e => {if(e.button==1)return false}); //Disable autoscrolling on middle button
         teleportpoint._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2;
         teleportpoint.socketListeners(game.socket);
     });

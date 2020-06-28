@@ -31,6 +31,7 @@
         constructor() {
             this._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2;
             this.animateMovement = Token.prototype.animateMovement;
+            this.setPosition = Token.prototype.setPosition;
         }
         get captureDialog() {
             return {
@@ -157,7 +158,7 @@
 
             //finally activate tokens layer
             canvas.tokens.activate();
-            return notokens;
+            return sameScene;
         }
         /* -------------------------------- Listeners ------------------------------- */
 
@@ -321,6 +322,57 @@
             notelist.replaceWith(select);
         }
 
+      /**
+       * Set the token's position by comparing its center position vs the nearest grid vertex
+       * Return a Promise that resolves to the Token once the animation for the movement has been completed
+       * @param {number} x            The x-coordinate of the token center
+       * @param {number} y            The y-coordinate of the token center
+       * @param {boolean} [animate]   Animate the movement path, default is true
+       * @return {Promise}            The Token after animation has completed
+       */
+        async _setPosition(x, y, {animate=true}={}) {
+
+        // Create a Ray for the requested movement
+        let origin = this._movement ? this.position : this._validPosition,
+            target = {x: x, y: y},
+            isVisible = this.isVisible;
+
+        // Create the movement ray
+        let ray = new Ray(origin, target);
+
+        // Update the new valid position
+        this._validPosition = target;
+
+        // Record the Token's new velocity
+        this._velocity = this._updateVelocity(ray);
+
+        // Update visibility for a non-controlled token which may have moved into the controlled tokens FOV
+        this.visible = isVisible;
+
+        // Conceal the HUD if it targets this Token
+        if ( this.hasActiveHUD ) this.layer.hud.clear();
+
+        // Begin animation towards the target position if the destination is visible
+        if ( animate && isVisible ) {
+          let animRay = new Ray(this.position, ray.B);
+          await this.animateMovement(animRay);
+        }
+
+        // Otherwise move the position directly
+        else this.position.set(x, y);
+
+        // If the movement took a controlled token off-screen, re-center the view
+        if (this._controlled && isVisible) {
+          let pad = 50;
+          let gp = this.getGlobalPosition();
+          if ((gp.x < pad) || (gp.x > window.innerWidth - pad) || (gp.y < pad) || (gp.y > window.innerHeight - pad)) {
+              if (this.getFlag("teleport","noanimate"))
+                  canvas.animatePan({x:this.center.x,y:this.center.y,duration:10});
+              else
+                canvas.animatePan(this.center);
+          }
+        }
+        }
         /**
         * Creates and renders a dialog for name entry
         * @param {*} data
