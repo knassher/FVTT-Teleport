@@ -45,6 +45,11 @@ There are 3 ways to trigger a TP, those are:
   - Toogle the "Notes Display" button on the Journal control bar.
   
 ### Changelog
+## V 2.1.6
+* Fixed an issue where journals were deleted when a note was deleted, now only journals associated with a TP will be deleted once a Tp is removed from the canvas.
+* Fixed a conflict with the "No Animation Token" module.
+* Fixed an issue where the "Add TP" button wasn't working.
+
 ## V 2.1.5
 * Fixed an issue where all PC are pulled to a scene when someone on the party triggers a TP.
 * Added a new setting option (only for GM's) to activate a scene once the GM has teleported some token. By default this setting is set to true.
