@@ -1,10 +1,10 @@
     Hooks.once("init", async function() {
-        Note.prototype._onClickLeft2 = teleportpoint._onDoubleLeft
-        Note.prototype._onClickRight2 = teleportpoint._onDoubleRight
+        //Setting modified methods into foundry
+        Note.prototype._onClickLeft2 = teleportpoint._onClickLeft2;
+        Note.prototype._onClickRight2 = teleportpoint._onClickRight2;
         KeyboardManager.prototype._handleMovement = teleportpoint._handleMovement;
         Token.prototype.animateMovement = teleportpoint._animateMovement;
         Token.prototype.setPosition = teleportpoint._setPosition;
-
         // Adding Icons for TeleportSheetConfig sheet
         CONFIG.Teleport = {
                                     noteIcons: {
@@ -32,8 +32,6 @@
         game.teleport = {
                             tp: teleportpoint
                         };
-        //Load icons used on the TP sheet config.
-        await loadTPIcons();
 
         //Register settings
         game.settings.register("teleport", "hidedepartingtokens", {
@@ -43,6 +41,15 @@
             type: Boolean,
             config: true,
             default: false
+        });
+
+        game.settings.register("teleport", "activatescene", {
+            name: "Activate Scene",
+            hint: "GM's only: Activate the destination scene once tokens are teleported.",
+            scope: "world",
+            type: Boolean,
+            config: true,
+            default: true
         });
 
         game.settings.register("teleport", "toggleaddtpbutton", {
@@ -55,7 +62,7 @@
         });
         game.settings.set("teleport","toggleaddtpbutton",false);
 
-        console.log(`Teleport | Initializing Teleport module for FoundryVTT is completed.`);
+        console.log(`Teleport | Initialization of Teleport module for FoundryVTT is completed.`);
     });
 
     /**
@@ -67,8 +74,10 @@
         const board = $(document.getElementById("board"));
         board.on("mouseup",e => teleportpoint._onMouseUp(e));
 		board.on("mousedown", e => {if(e.button==1)return false}); //Disable autoscrolling on middle button
-        teleportpoint._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2;
+        teleportpoint._oldOnClickLeft2 = NotesLayer.prototype._onClickLeft2; //Saves the notelayer double left click to restore it
         teleportpoint.socketListeners(game.socket);
+        //Load icons used on the TP sheet config.
+        await loadTPIcons();
     });
 
     /**
@@ -109,7 +118,12 @@
     * Hooks fired when deleting a note.
     **/
 
-    Hooks.on("deleteNote", (scene, sceneId, data, options, userId) =>{
+    Hooks.on("deleteNote", (scene, note, options, userId) =>{
+        try {
+            if ("teleport" in note.flags) game.journal.get(note.entryId).delete();
+        }
+        catch (e) {
+        }
         return canvas.activeLayer._hover ? canvas.activeLayer._hover = null : null;
     });
 
@@ -120,6 +134,7 @@
 
     Hooks.on("teleportation",async (sceneTo,noteTo,result,userId) =>{
         if (game.user.isGM) return;
+        if (userId !== game.user.id) return;
         if (result) return;
         const scene = game.scenes.get(sceneTo);
         if (!scene.options["loaded"]) {
