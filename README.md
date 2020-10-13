@@ -1,3 +1,9 @@
+# PROJECT CLOSED #
+
+Unfortunately, I don't have time to mantein the project, that's why I'm closing the project.
+
+The last working version of FVTT that is supported by the module is 0.66.
+
 # FVTT-Teleport
 A module for FVTT to teleport tokens between two points
 
